@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  fastapi:
+    build: .
+    # The command is inherited from the Dockerfile's CMD
+    volumes:
+      - .:/app  # Mount the current directory for easy development
+    depends_on:
+      - redis
+    env_file:
+      - .env
+
+  redis:
+    image: redis:7-alpine
+    # No ports need to be exposed to the host machine, as other containers
+    # will access it via the internal Docker network.
+
+  rq-worker:
+    build: .
+    # Override the default CMD to start the RQ worker instead of the web server
+    command: rq worker --url redis://redis:6379
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+    env_file:
+      - .env
+
+  nginx:
+    image: nginx:latest
+    ports:
+      # Expose HTTP and HTTPS ports to the host machine
+      - "80:80"
+      - "443:443"
+    volumes:
+      # Mount the Nginx configuration file
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      # Mount your SSL certificates (e.g., from Let's Encrypt)
+      # IMPORTANT: You must have these certificate files on your host machine
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    depends_on:
+      - fastapi

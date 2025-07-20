@@ -1,0 +1,27 @@
+# FastAPI and Server
+fastapi
+uvicorn[standard]
+python-dotenv
+
+# Task Queue and Caching
+redis
+rq
+
+# Web Service Utilities
+slowapi
+prometheus-fastapi-instrumentator
+httpx
+
+# Agent and Machine Learning Dependencies
+transformers
+torch
+bitsandbytes
+peft
+trl
+
+# Code Analysis Tools
+pylint
+radon
+flake8
+bandit
+esprima-python

@@ -47,9 +47,6 @@ function greet( name ){
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# This path should point to the log file created by the worker.
-# It's good practice to also define this in config/settings.py and import it.
-TRAINING_LOG_PATH = os.getenv("TRAINING_LOG_PATH", "training_logs/interactions.csv")
 
 def _load_from_csv(path):
     """Loads training data from a CSV log file."""

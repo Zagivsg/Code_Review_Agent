@@ -37,5 +37,5 @@ REWARD_WEIGHTS = {
 # Data paths
 DATASET_PATH = "data/code_review_dataset.json"  # Path to dataset,support json and csv files
 
-#Training Data Log Path, used to record interation
+#Training Data Log Path used to record interation, can be used for training
 TRAINING_LOG_PATH = "training_logs/interactions.csv"

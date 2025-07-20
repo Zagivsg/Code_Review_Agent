@@ -1,4 +1,7 @@
 # Multi-dimensional reward function 
+# This is the complete, multi-dimensional reward function with full support
+# for both Python and JavaScript analysis.
+
 import subprocess
 import json
 import tempfile
@@ -19,17 +22,14 @@ def _run_tool_with_stdin(command, code):
         )
         return process.stdout
     except FileNotFoundError:
-        # This can happen if the tool (e.g., bandit) is not in the system's PATH
         return ""
 
 def get_style_issues(code, language):
     """Get style issues from flake8 (Python) or eslint (JavaScript)."""
     if language == "python":
-        # The command '-' tells flake8 to read from stdin
         output = _run_tool_with_stdin(['flake8', '--stdin-display-name', 'style_check', '-'], code)
         return len(output.strip().splitlines())
     elif language == "javascript":
-        # ESLint doesn't support stdin well, so we use a temporary file
         with tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix=".js") as tmp:
             tmp.write(code)
             tmp_path = tmp.name
@@ -51,28 +51,48 @@ def get_style_issues(code, language):
     return 0
 
 def get_security_issues(code, language):
-    """Get security issues from bandit (Python)."""
+    """Get security issues from bandit (Python) or njsscan (JavaScript)."""
     if language == "python":
-        # The command '-' tells bandit to read from stdin
         output = _run_tool_with_stdin(['bandit', '-f', 'json', '-'], code)
         try:
             results = json.loads(output)
             return len(results.get("results", []))
         except json.JSONDecodeError:
             return 0
-    # Placeholder for a JS security tool if needed (e.g., njsscan)
+    elif language == "javascript":
+        with tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix=".js") as tmp:
+            tmp.write(code)
+            tmp_path = tmp.name
+        try:
+            njsscan_path = os.path.join('.', 'node_modules', '.bin', 'njsscan')
+            result = subprocess.run(
+                [njsscan_path, '--json', '-f', tmp_path],
+                capture_output=True, text=True, check=False
+            )
+            os.unlink(tmp_path)
+            if result.stdout:
+                # njsscan nests the findings
+                scan_results = json.loads(result.stdout)
+                total_issues = 0
+                for file_key in scan_results:
+                    total_issues += len(scan_results[file_key].get('findings', []))
+                return total_issues
+            return 0
+        except (FileNotFoundError, json.JSONDecodeError):
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+            return 0
     return 0
 
 def get_readability_score(code, language):
-    """Get readability score (cyclomatic complexity) from radon (Python)."""
+    """Get readability score (cyclomatic complexity)."""
     if language == "python":
         try:
             visitor = ComplexityVisitor.from_code(code)
             return visitor.total_complexity
         except Exception:
-            return 25 # Assign a high complexity for code that fails to parse
+            return 25 
     elif language == "javascript":
-        # For JS, we use the count of eslint complexity issues as a proxy
         return get_style_issues(code, language)
     return 0
 
@@ -83,13 +103,11 @@ def get_performance_score(code, language):
     """
     score = 0
     if language == "python":
-        # Penalize 'for' loops that could be list/dict comprehensions
         score += len(re.findall(r'\n\s*for\s.*\s+.*\..*append\(', code))
-        # Penalize range(len(...))
         score += code.count("range(len(")
     elif language == "javascript":
-        # Penalize for...in loops on arrays, which is slow
         score += code.count("for (var") + code.count("for (let")
+        score += code.count(".innerHTML") 
     return score
 
 def calculate_reward(original_code, improved_code, language):
@@ -98,10 +116,10 @@ def calculate_reward(original_code, improved_code, language):
     """
     metrics = {}
     
-    # Calculate delta for each metric (lower score is better)
     def get_delta(metric_func, original, improved, lang):
         original_score = metric_func(original, lang)
         improved_score = metric_func(improved, lang)
+        # Calculate the percentage reduction in issues
         delta = (original_score - improved_score) / max(original_score, 1)
         return delta, original_score, improved_score
 

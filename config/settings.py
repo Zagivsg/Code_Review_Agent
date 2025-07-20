@@ -25,7 +25,6 @@ LORA_CONFIG = {
 }
 
 # Reward function weights for different dimensions of code quality.
-# The weights should sum to 1.0 for a balanced evaluation.
 REWARD_WEIGHTS = {
     "readability": 0.3,
     "performance": 0.2,

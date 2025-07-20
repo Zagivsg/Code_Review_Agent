@@ -40,13 +40,10 @@ function greet( name ){
     ]
 '''
 
-# This script is now modified to load data directly from the interaction logs
-
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
 
 def _load_from_csv(path):
     """Loads training data from a CSV log file."""
@@ -86,7 +83,7 @@ def _load_from_jsonl(path):
 def load_code_review_data(path):
     """
     Loads the code review training data
-    This function is called by your `ppo_trainer.py`.
+    This function is called by `ppo_trainer.py`.
     """
     if not os.path.exists(path):
         logger.warning(f"No training log file found at '{path}'. Cannot start training.")

@@ -36,8 +36,7 @@ services:
     volumes:
       # Mount the Nginx configuration file
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      # Mount your SSL certificates (e.g., from Let's Encrypt)
-      # IMPORTANT: You must have these certificate files on your host machine
+      # Mount SSL certificates (e.g., from Let's Encrypt)
       - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - fastapi

@@ -1,0 +1,10 @@
+{
+  "name": "code-review-agent-tools",
+  "version": "1.0.0",
+  "description": "JavaScript analysis tools for the code review agent.",
+  "private": true,
+  "dependencies": {
+    "eslint": "^8.57.0",
+    "njsscan": "^3.1.0"
+  }
+}
